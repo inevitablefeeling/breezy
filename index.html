@@ -1,1 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Breezy — a quiet, thoughtful camera companion.">
+  <title>Breezy — See differently.</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/breezy.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="Breezy home">breezy<span class="wordmark-dot">.</span></a>
+      <div class="topbar-actions">
+        <span class="live-indicator"><i></i> CAMERA</span>
+        <button class="icon-button" id="grid-toggle" aria-label="Toggle composition grid" title="Composition grid">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>
+        </button>
+        <button class="icon-button" id="settings-open" aria-label="Open settings" title="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"/><path d="m19.4 13.5 1.1.9-1.5 2.6-1.4-.5a7.9 7.9 0 0 1-1.7 1l-.2 1.5h-3l-.3-1.5a7.9 7.9 0 0 1-1.7-1l-1.4.5-1.5-2.6 1.1-.9a7.4 7.4 0 0 1 0-2l-1.1-.9 1.5-2.6 1.4.5a7.9 7.9 0 0 1 1.7-1l.3-1.5h3l.2 1.5a7.9 7.9 0 0 1 1.7 1l1.4-.5 1.5 2.6-1.1.9a7.4 7.4 0 0 1 0 2Z" transform="translate(-1 -1) scale(1.05)"/></svg>
+        </button>
+      </div>
+    </header>
 
+    <section class="camera-stage" id="camera-stage" aria-label="Camera preview">
+      <video id="camera-video" autoplay playsinline muted></video>
+      <div class="preview-placeholder" id="preview-placeholder">
+        <div class="placeholder-mark"><span></span><span></span><span></span><span></span></div>
+        <p class="placeholder-kicker">MAKE ROOM FOR A MOMENT</p>
+        <h1>Your next<br>favorite photo.</h1>
+        <button class="primary-button" id="start-camera">Open camera <span>↗</span></button>
+        <p class="permission-note">Camera access stays on your device.</p>
+      </div>
+
+      <div class="composition-grid" id="composition-grid" aria-hidden="true">
+        <span class="grid-v one"></span><span class="grid-v two"></span>
+        <span class="grid-h one"></span><span class="grid-h two"></span>
+        <span class="grid-center"></span>
+      </div>
+
+      <div class="preview-topline">
+        <span class="preview-status"><i></i><b id="camera-status">READY WHEN YOU ARE</b></span>
+        <span class="preview-time" id="clock">--:--</span>
+      </div>
+
+      <div class="guide-chip" id="guide-chip">
+        <span class="guide-spark">✳</span>
+        <span id="guide-text">Find your frame</span>
+      </div>
+
+      <div class="zoom-picker" id="zoom-picker" aria-label="Zoom level">
+        <button class="zoom-option is-selected" data-zoom="1">1×</button>
+        <button class="zoom-option" data-zoom="1.5">1.5×</button>
+        <button class="zoom-option" data-zoom="2">2×</button>
+      </div>
+      <div class="camera-flash" id="camera-flash"></div>
+    </section>
+
+    <section class="control-deck" aria-label="Camera controls">
+      <div class="mode-picker" role="group" aria-label="Capture mode">
+        <button class="mode-option is-active" data-mode="PHOTO">PHOTO</button>
+        <button class="mode-option" data-mode="PORTRAIT">PORTRAIT</button>
+        <button class="mode-option" data-mode="SQUARE">SQUARE</button>
+      </div>
+      <div class="shutter-row">
+        <button class="side-control" id="flip-camera" aria-label="Switch camera">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-2.5-2.5M17 17H6l2.5 2.5"/><path d="M18 7a7 7 0 0 1 1 9M6 17a7 7 0 0 1-1-9"/></svg>
+        </button>
+        <button class="shutter" id="take-photo" aria-label="Take photo"><span></span></button>
+        <button class="side-control gallery-thumb" id="open-last-photo" aria-label="Open last photo">
+          <span class="thumb-placeholder">▧</span>
+          <img id="last-photo-thumb" alt="" hidden>
+        </button>
+      </div>
+      <div class="deck-caption"><span> BREEZY CAMERA </span><span>SEE DIFFERENTLY.</span></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="sheet" id="settings-sheet">
+    <form method="dialog" class="sheet-card">
+      <div class="sheet-handle"></div>
+      <div class="sheet-heading"><div><p class="eyebrow">YOUR CAMERA</p><h2>Settings</h2></div><button class="close-button" aria-label="Close settings">×</button></div>
+      <label class="setting-row"><span><b>Composition grid</b><small>Show a rule-of-thirds guide.</small></span><input type="checkbox" id="settings-grid"></label>
+      <label class="setting-row"><span><b>Haptic-style feedback</b><small>Use a small visual pulse on capture.</small></span><input type="checkbox" id="settings-feedback" checked></label>
+      <div class="setting-note">Breezy is an early prototype. Portrait mode, AI scene analysis and film looks will be added in later builds.</div>
+    </form>
+  </dialog>
+
+  <dialog class="sheet" id="photo-sheet">
+    <div class="sheet-card photo-card">
+      <div class="sheet-handle"></div>
+      <div class="sheet-heading"><div><p class="eyebrow">YOUR MOMENT</p><h2>Last capture</h2></div><button class="close-button" id="photo-close" aria-label="Close photo">×</button></div>
+      <img id="photo-preview" class="photo-preview" alt="Your latest Breezy photo">
+      <div class="photo-actions"><button class="primary-button" id="download-photo">Save photo <span>↓</span></button></div>
+    </div>
+  </dialog>
+
+  <canvas id="capture-canvas" hidden></canvas>
+  <script src="app.js"></script>
+</body>
+</html>
