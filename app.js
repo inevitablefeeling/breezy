@@ -1,207 +1,29 @@
-const video = document.querySelector("#camera-video");
-const placeholder = document.querySelector("#preview-placeholder");
-const startButton = document.querySelector("#start-camera");
-const grid = document.querySelector("#composition-grid");
-const gridToggle = document.querySelector("#grid-toggle");
-const settingsGrid = document.querySelector("#settings-grid");
-const settingsSheet = document.querySelector("#settings-sheet");
-const photoSheet = document.querySelector("#photo-sheet");
-const toast = document.querySelector("#toast");
-const canvas = document.querySelector("#capture-canvas");
-const context = canvas.getContext("2d");
-const flash = document.querySelector("#camera-flash");
-const cameraStatus = document.querySelector("#camera-status");
-const guideChip = document.querySelector("#guide-chip");
-const guideText = document.querySelector("#guide-text");
-const clock = document.querySelector("#clock");
-
-let stream = null;
-let facingMode = "environment";
-let currentZoom = 1;
-let lastPhotoUrl = null;
-let lastPhotoBlob = null;
-let toastTimer;
-
-function showToast(message) {
-  toast.textContent = message;
-  toast.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 2300);
-}
-
-function updateClock() {
-  clock.textContent = new Intl.DateTimeFormat(undefined, {
-    hour: "2-digit", minute: "2-digit"
-  }).format(new Date());
-}
-updateClock();
-setInterval(updateClock, 15000);
-
-async function openCamera() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    showToast("Open Breezy on an HTTPS connection to use the camera.");
-    return;
-  }
-
-  if (stream) stream.getTracks().forEach(track => track.stop());
-
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        facingMode: { ideal: facingMode },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      }
-    });
-    video.srcObject = stream;
-    await video.play();
-    video.style.display = "block";
-    placeholder.hidden = true;
-    cameraStatus.textContent = "CAMERA ACTIVE";
-    showToast("You're ready to shoot");
-    guideChip.classList.add("visible");
-    guideText.textContent = "Move slowly. Find your frame.";
-    setTimeout(() => guideChip.classList.remove("visible"), 3200);
-    applyZoom();
-  } catch (error) {
-    console.error("Camera error:", error);
-    const message = error.name === "NotAllowedError"
-      ? "Allow camera access in your browser settings."
-      : "Couldn't open the camera. Try again.";
-    showToast(message);
-  }
-}
-
-startButton.addEventListener("click", openCamera);
-
-function setGrid(enabled) {
-  grid.classList.toggle("visible", enabled);
-  gridToggle.classList.toggle("is-on", enabled);
-  settingsGrid.checked = enabled;
-}
-gridToggle.addEventListener("click", () => setGrid(!grid.classList.contains("visible")));
-settingsGrid.addEventListener("change", event => setGrid(event.target.checked));
-
-document.querySelector("#settings-open").addEventListener("click", () => settingsSheet.showModal());
-settingsSheet.querySelector(".close-button").addEventListener("click", () => settingsSheet.close());
-
-function applyZoom() {
-  // Digital preview zoom is a visual crop; capture output uses the same crop.
-  video.style.transform = `scale(${currentZoom})`;
-}
-document.querySelectorAll(".zoom-option").forEach(button => {
-  button.addEventListener("click", () => {
-    currentZoom = Number(button.dataset.zoom);
-    document.querySelectorAll(".zoom-option").forEach(item => item.classList.remove("is-selected"));
-    button.classList.add("is-selected");
-    applyZoom();
-  });
-});
-
-document.querySelector("#flip-camera").addEventListener("click", async () => {
-  facingMode = facingMode === "environment" ? "user" : "environment";
-  currentZoom = 1;
-  document.querySelectorAll(".zoom-option").forEach(item => item.classList.toggle("is-selected", item.dataset.zoom === "1"));
-  if (stream) await openCamera();
-  else showToast("Camera switches when you open the camera.");
-});
-
-function capturePhoto() {
-  if (!stream || video.readyState < 2 || !video.videoWidth) {
-    showToast("Open the camera before taking a photo.");
-    return;
-  }
-
-  const sourceWidth = video.videoWidth;
-  const sourceHeight = video.videoHeight;
-  const cropWidth = sourceWidth / currentZoom;
-  const cropHeight = sourceHeight / currentZoom;
-  const sx = (sourceWidth - cropWidth) / 2;
-  const sy = (sourceHeight - cropHeight) / 2;
-
-  canvas.width = Math.round(cropWidth);
-  canvas.height = Math.round(cropHeight);
-  context.save();
-  if (facingMode === "user") {
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
-  }
-  context.drawImage(video, sx, sy, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
-  context.restore();
-
-  canvas.toBlob(blob => {
-    if (!blob) {
-      showToast("Couldn't capture that photo. Try again.");
-      return;
-    }
-    lastPhotoBlob = blob;
-    if (lastPhotoUrl) URL.revokeObjectURL(lastPhotoUrl);
-    lastPhotoUrl = URL.createObjectURL(blob);
-    document.querySelector("#last-photo-thumb").src = lastPhotoUrl;
-    document.querySelector("#last-photo-thumb").hidden = false;
-    document.querySelector(".thumb-placeholder").hidden = true;
-    document.querySelector("#photo-preview").src = lastPhotoUrl;
-
-    flash.classList.remove("fire");
-    void flash.offsetWidth;
-    flash.classList.add("fire");
-    if (navigator.vibrate) navigator.vibrate(18);
-    showToast("Captured. Keep that moment.");
-  }, "image/jpeg", 0.94);
-}
-document.querySelector("#take-photo").addEventListener("click", capturePhoto);
-
-document.querySelector("#open-last-photo").addEventListener("click", () => {
-  if (!lastPhotoUrl) {
-    showToast("Your latest photo will appear here.");
-    return;
-  }
-  photoSheet.showModal();
-});
-document.querySelector("#photo-close").addEventListener("click", () => photoSheet.close());
-
-document.querySelector("#download-photo").addEventListener("click", () => {
-  if (!lastPhotoBlob) return;
-  const url = URL.createObjectURL(lastPhotoBlob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `breezy-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-  showToast("Photo ready to save");
-});
-
-document.querySelectorAll(".mode-option").forEach(button => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll(".mode-option").forEach(item => item.classList.remove("is-active"));
-    button.classList.add("is-active");
-    if (button.dataset.mode !== "PHOTO") {
-      showToast(`${button.dataset.mode[0]}${button.dataset.mode.slice(1).toLowerCase()} mode is coming later.`);
-      document.querySelector('[data-mode="PHOTO"]').classList.add("is-active");
-      button.classList.remove("is-active");
-    }
-  });
-});
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden && stream) {
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-    video.srcObject = null;
-    video.style.display = "none";
-    placeholder.hidden = false;
-    cameraStatus.textContent = "READY WHEN YOU ARE";
-  }
-});
-
-// Register the offline shell. Camera access still requires a secure origin (HTTPS).
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(error => {
-      console.warn("Service worker registration failed:", error);
-    });
-  });
-}
+const $ = s => document.querySelector(s);
+const video=$('#camera-video'), placeholder=$('#preview-placeholder'), streamState={stream:null,facing:'environment',zoom:1,mirror:true,mode:'PHOTO',photo:null,photoUrl:null,blob:null};
+const canvas=$('#capture-canvas'),ctx=canvas.getContext('2d'),toast=$('#toast');let toastTimer,editorImage=null,editorSettings={filter:'none',brightness:100,contrast:100,saturate:100,grain:false,vignette:false,date:false,frame:'none'};
+function toastMsg(m){toast.textContent=m;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2400)}
+function updateClock(){$('#clock').textContent=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit'}).format(new Date())}updateClock();setInterval(updateClock,15000);
+function stopCamera(){if(streamState.stream)streamState.stream.getTracks().forEach(t=>t.stop());streamState.stream=null;video.srcObject=null}
+async function openCamera(){if(!navigator.mediaDevices?.getUserMedia){toastMsg('Camera requires HTTPS and a supported browser.');return}stopCamera();try{const s=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:streamState.facing},width:{ideal:1920},height:{ideal:1080}}});streamState.stream=s;video.srcObject=s;await video.play();video.style.display='block';placeholder.hidden=true;$('#camera-status').textContent='CAMERA ACTIVE';video.style.transform=streamState.facing==='user'&&streamState.mirror?'scaleX(-1)':'none';applyZoom();toastMsg('Camera ready');}catch(e){console.error(e);stopCamera();toastMsg(e.name==='NotAllowedError'?'Allow camera access in browser settings.':'Could not open camera. Check permissions and try again.')}}
+$('#start-camera').addEventListener('click',openCamera);
+function setGrid(v){$('#composition-grid').classList.toggle('visible',v);$('#grid-toggle').classList.toggle('is-on',v);$('#settings-grid').checked=v;localStorage.setItem('breezy-grid',v?'1':'0')}setGrid(localStorage.getItem('breezy-grid')==='1');$('#grid-toggle').onclick=()=>setGrid(!$('#composition-grid').classList.contains('visible'));$('#settings-grid').onchange=e=>setGrid(e.target.checked);
+$('#settings-open').onclick=()=>$('#settings-sheet').showModal();$('#settings-sheet .close-button').onclick=()=>$('#settings-sheet').close();
+streamState.mirror=localStorage.getItem('breezy-mirror')!=='0';$('#mirror-toggle').checked=streamState.mirror;$('#mirror-toggle').onchange=e=>{streamState.mirror=e.target.checked;localStorage.setItem('breezy-mirror',streamState.mirror?'1':'0');if(streamState.facing==='user')video.style.transform=streamState.mirror?`scaleX(-1) scale(${streamState.zoom})`:`scale(${streamState.zoom})`};
+function applyZoom(){video.style.transform=`${streamState.facing==='user'&&streamState.mirror?'scaleX(-1) ':''}scale(${streamState.zoom})`}
+document.querySelectorAll('.zoom-option').forEach(b=>b.onclick=()=>{streamState.zoom=Number(b.dataset.zoom);document.querySelectorAll('.zoom-option').forEach(x=>x.classList.toggle('is-selected',x===b));applyZoom()});
+$('#flip-camera').onclick=async()=>{streamState.facing=streamState.facing==='environment'?'user':'environment';streamState.zoom=1;document.querySelectorAll('.zoom-option').forEach(b=>b.classList.toggle('is-selected',b.dataset.zoom==='1'));if(streamState.stream)await openCamera();else toastMsg('Camera switches when you open it.')};
+function cropRect(w,h,mode){const stage=$('#camera-stage'),target=mode==='SQUARE'?1:(stage.clientWidth/stage.clientHeight||w/h),source=w/h;if(source>target){const cw=h*target;return[(w-cw)/2,0,cw,h]}const ch=w/target;return[0,(h-ch)/2,w,ch]}
+function capturePhoto(){if(!streamState.stream||video.readyState<2||!video.videoWidth){toastMsg('Open the camera before taking a photo.');return}const w=video.videoWidth,h=video.videoHeight,[sx,sy,cw,ch]=cropRect(w,h,streamState.mode);const zoom=streamState.zoom,zw=cw/zoom,zh=ch/zoom,ox=sx+(cw-zw)/2,oy=sy+(ch-zh)/2;canvas.width=Math.round(zw);canvas.height=Math.round(zh);ctx.save();if(streamState.facing==='user'&&streamState.mirror){ctx.translate(canvas.width,0);ctx.scale(-1,1)}ctx.drawImage(video,ox,oy,zw,zh,0,0,canvas.width,canvas.height);ctx.restore();canvas.toBlob(blob=>{if(!blob){toastMsg('Could not capture photo.');return}streamState.blob=blob;if(streamState.photoUrl)URL.revokeObjectURL(streamState.photoUrl);streamState.photoUrl=URL.createObjectURL(blob);$('#last-photo-thumb').src=streamState.photoUrl;$('#last-photo-thumb').hidden=false;$('.thumb-placeholder').hidden=true;$('#photo-preview').src=streamState.photoUrl;$('#camera-flash').classList.remove('fire');void $('#camera-flash').offsetWidth;$('#camera-flash').classList.add('fire');if($('#settings-feedback').checked&&navigator.vibrate)navigator.vibrate(18);toastMsg('Captured. Keep that moment.')},'image/jpeg',.94)}
+$('#take-photo').onclick=capturePhoto;$('#open-last-photo').onclick=()=>streamState.photoUrl?$('#photo-sheet').showModal():toastMsg('Your latest photo will appear here.');$('#photo-close').onclick=()=>$('#photo-sheet').close();
+function downloadBlob(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}$('#download-photo').onclick=()=>{if(streamState.blob)downloadBlob(streamState.blob,`breezy-${Date.now()}.jpg`)};
+document.querySelectorAll('.mode-option').forEach(b=>b.onclick=()=>{streamState.mode=b.dataset.mode;document.querySelectorAll('.mode-option').forEach(x=>x.classList.toggle('is-active',x===b));toastMsg(`${streamState.mode==='PHOTO'?'Photo':streamState.mode==='SQUARE'?'Square crop':'Portrait framing'} selected`) });
+// Editor: all adjustments are rendered locally from the original captured image.
+function loadEditor(){if(!streamState.photoUrl)return;editorImage=new Image();editorImage.onload=()=>renderEditor();editorImage.src=streamState.photoUrl;$('#photo-sheet').close();$('#editor-sheet').showModal()}
+$('#edit-photo').onclick=loadEditor;$('#editor-close').onclick=()=>$('#editor-sheet').close();
+function renderEditor(){if(!editorImage)return;const c=$('#editor-canvas'),g=c.getContext('2d'),maxW=1100,scale=Math.min(1,maxW/editorImage.width);c.width=Math.round(editorImage.width*scale);c.height=Math.round(editorImage.height*scale);g.clearRect(0,0,c.width,c.height);g.filter=`${editorSettings.filter==='none'?'':editorSettings.filter+' ' }brightness(${editorSettings.brightness}%) contrast(${editorSettings.contrast}%) saturate(${editorSettings.saturate}%)`;g.drawImage(editorImage,0,0,c.width,c.height);g.filter='none';if(editorSettings.grain){const id=g.getImageData(0,0,c.width,c.height),d=id.data;for(let i=0;i<d.length;i+=4){const n=(Math.random()-.5)*22;d[i]+=n;d[i+1]+=n;d[i+2]+=n}g.putImageData(id,0,0)}if(editorSettings.vignette){const r=Math.max(c.width,c.height)*.72,gr=g.createRadialGradient(c.width/2,c.height/2,r*.25,c.width/2,c.height/2,r);gr.addColorStop(0,'transparent');gr.addColorStop(1,'rgba(0,0,0,.62)');g.fillStyle=gr;g.fillRect(0,0,c.width,c.height)}if(editorSettings.date){g.fillStyle='rgba(255,255,255,.9)';g.font=`${Math.max(12,c.width*.025)}px sans-serif`;g.textAlign='right';g.fillText(new Date().toLocaleDateString(),c.width-18,c.height-18)}if(editorSettings.frame!=='none'){const pad=Math.max(10,c.width*.035);g.fillStyle=editorSettings.frame==='black'?'#080808':editorSettings.frame==='paper'?'#e7dfca':'#fff';g.fillRect(0,0,c.width,pad);g.fillRect(0,c.height-pad,c.width,pad);g.fillRect(0,0,pad,c.height);g.fillRect(c.width-pad,0,pad,c.height)}}
+document.querySelectorAll('.editor-tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.editor-tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.editor-panel').forEach(p=>p.hidden=p.id!==`${b.dataset.tab}-panel`)});
+document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{editorSettings.filter=b.dataset.filter;renderEditor()});document.querySelectorAll('[data-adjust]').forEach(i=>i.oninput=()=>{editorSettings[i.dataset.adjust]=Number(i.value);renderEditor()});[['grain-toggle','grain'],['vignette-toggle','vignette'],['date-toggle','date']].forEach(([id,key])=>$('#'+id).onchange=e=>{editorSettings[key]=e.target.checked;renderEditor()});document.querySelectorAll('[data-frame]').forEach(b=>b.onclick=()=>{editorSettings.frame=b.dataset.frame;renderEditor()});
+function resetEditor(){editorSettings={filter:'none',brightness:100,contrast:100,saturate:100,grain:false,vignette:false,date:false,frame:'none'};document.querySelectorAll('[data-adjust]').forEach(i=>i.value=100);['grain-toggle','vignette-toggle','date-toggle'].forEach(id=>$('#'+id).checked=false);renderEditor()}$('#editor-reset').onclick=resetEditor;
+$('#save-edit').onclick=()=>$('#editor-canvas').toBlob(blob=>{if(!blob){toastMsg('Could not export edited photo.');return}downloadBlob(blob,`breezy-edited-${Date.now()}.jpg`);toastMsg('Edited photo exported')},'image/jpeg',.94);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&streamState.stream){stopCamera();video.style.display='none';placeholder.hidden=false;$('#camera-status').textContent='READY WHEN YOU ARE'}});
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.warn));

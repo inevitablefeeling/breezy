@@ -1,106 +1,40 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#090909">
-  <meta name="description" content="Breezy — a quiet, thoughtful camera companion.">
-  <title>Breezy — See differently.</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/breezy.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d14"><meta name="description" content="Breezy — a quiet, thoughtful camera companion.">
+<title>Breezy — See differently.</title><link rel="manifest" href="manifest.json"><link rel="icon" href="icons/breezy.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="app-shell">
-    <header class="topbar">
-      <a class="wordmark" href="#" aria-label="Breezy home">breezy<span class="wordmark-dot">.</span></a>
-      <div class="topbar-actions">
-        <span class="live-indicator"><i></i> CAMERA</span>
-        <button class="icon-button" id="grid-toggle" aria-label="Toggle composition grid" title="Composition grid">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>
-        </button>
-        <button class="icon-button" id="settings-open" aria-label="Open settings" title="Settings">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"/><path d="m19.4 13.5 1.1.9-1.5 2.6-1.4-.5a7.9 7.9 0 0 1-1.7 1l-.2 1.5h-3l-.3-1.5a7.9 7.9 0 0 1-1.7-1l-1.4.5-1.5-2.6 1.1-.9a7.4 7.4 0 0 1 0-2l-1.1-.9 1.5-2.6 1.4.5a7.9 7.9 0 0 1 1.7-1l.3-1.5h3l.2 1.5a7.9 7.9 0 0 1 1.7 1l1.4-.5 1.5 2.6-1.1.9a7.4 7.4 0 0 1 0 2Z" transform="translate(-1 -1) scale(1.05)"/></svg>
-        </button>
-      </div>
-    </header>
-
-    <section class="camera-stage" id="camera-stage" aria-label="Camera preview">
-      <video id="camera-video" autoplay playsinline muted></video>
-      <div class="preview-placeholder" id="preview-placeholder">
-        <div class="placeholder-mark"><span></span><span></span><span></span><span></span></div>
-        <p class="placeholder-kicker">MAKE ROOM FOR A MOMENT</p>
-        <h1>Your next<br>favorite photo.</h1>
-        <button class="primary-button" id="start-camera">Open camera <span>↗</span></button>
-        <p class="permission-note">Camera access stays on your device.</p>
-      </div>
-
-      <div class="composition-grid" id="composition-grid" aria-hidden="true">
-        <span class="grid-v one"></span><span class="grid-v two"></span>
-        <span class="grid-h one"></span><span class="grid-h two"></span>
-        <span class="grid-center"></span>
-      </div>
-
-      <div class="preview-topline">
-        <span class="preview-status"><i></i><b id="camera-status">READY WHEN YOU ARE</b></span>
-        <span class="preview-time" id="clock">--:--</span>
-      </div>
-
-      <div class="guide-chip" id="guide-chip">
-        <span class="guide-spark">✳</span>
-        <span id="guide-text">Find your frame</span>
-      </div>
-
-      <div class="zoom-picker" id="zoom-picker" aria-label="Zoom level">
-        <button class="zoom-option is-selected" data-zoom="1">1×</button>
-        <button class="zoom-option" data-zoom="1.5">1.5×</button>
-        <button class="zoom-option" data-zoom="2">2×</button>
-      </div>
-      <div class="camera-flash" id="camera-flash"></div>
-    </section>
-
-    <section class="control-deck" aria-label="Camera controls">
-      <div class="mode-picker" role="group" aria-label="Capture mode">
-        <button class="mode-option is-active" data-mode="PHOTO">PHOTO</button>
-        <button class="mode-option" data-mode="PORTRAIT">PORTRAIT</button>
-        <button class="mode-option" data-mode="SQUARE">SQUARE</button>
-      </div>
-      <div class="shutter-row">
-        <button class="side-control" id="flip-camera" aria-label="Switch camera">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-2.5-2.5M17 17H6l2.5 2.5"/><path d="M18 7a7 7 0 0 1 1 9M6 17a7 7 0 0 1-1-9"/></svg>
-        </button>
-        <button class="shutter" id="take-photo" aria-label="Take photo"><span></span></button>
-        <button class="side-control gallery-thumb" id="open-last-photo" aria-label="Open last photo">
-          <span class="thumb-placeholder">▧</span>
-          <img id="last-photo-thumb" alt="" hidden>
-        </button>
-      </div>
-      <div class="deck-caption"><span> BREEZY CAMERA </span><span>SEE DIFFERENTLY.</span></div>
-    </section>
-  </main>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <dialog class="sheet" id="settings-sheet">
-    <form method="dialog" class="sheet-card">
-      <div class="sheet-handle"></div>
-      <div class="sheet-heading"><div><p class="eyebrow">YOUR CAMERA</p><h2>Settings</h2></div><button class="close-button" aria-label="Close settings">×</button></div>
-      <label class="setting-row"><span><b>Composition grid</b><small>Show a rule-of-thirds guide.</small></span><input type="checkbox" id="settings-grid"></label>
-      <label class="setting-row"><span><b>Haptic-style feedback</b><small>Use a small visual pulse on capture.</small></span><input type="checkbox" id="settings-feedback" checked></label>
-      <div class="setting-note">Breezy is an early prototype. Portrait mode, AI scene analysis and film looks will be added in later builds.</div>
-    </form>
-  </dialog>
-
-  <dialog class="sheet" id="photo-sheet">
-    <div class="sheet-card photo-card">
-      <div class="sheet-handle"></div>
-      <div class="sheet-heading"><div><p class="eyebrow">YOUR MOMENT</p><h2>Last capture</h2></div><button class="close-button" id="photo-close" aria-label="Close photo">×</button></div>
-      <img id="photo-preview" class="photo-preview" alt="Your latest Breezy photo">
-      <div class="photo-actions"><button class="primary-button" id="download-photo">Save photo <span>↓</span></button></div>
-    </div>
-  </dialog>
-
-  <canvas id="capture-canvas" hidden></canvas>
-  <script src="app.js"></script>
-</body>
-</html>
+<main class="app-shell" id="home-view">
+<header class="topbar"><a class="wordmark" href="#" aria-label="Breezy home">breezy<span>.</span></a><div class="topbar-actions"><span class="live-indicator"><i></i> CAMERA</span><button class="icon-button" id="grid-toggle" aria-label="Toggle composition grid">▦</button><button class="icon-button" id="settings-open" aria-label="Open settings">⚙</button></div></header>
+<section class="camera-stage" id="camera-stage" aria-label="Camera preview">
+<video id="camera-video" autoplay playsinline muted></video>
+<div class="preview-placeholder" id="preview-placeholder"><div class="placeholder-mark">✳</div><p class="placeholder-kicker">MAKE ROOM FOR A MOMENT</p><h1>Your next<br>favorite photo.</h1><button class="primary-button" id="start-camera">Open camera <span>↗</span></button><p class="permission-note">Camera access stays on your device.</p></div>
+<div class="composition-grid" id="composition-grid"><span></span><span></span><span></span><span></span></div>
+<div class="preview-topline"><span class="preview-status"><i></i><b id="camera-status">READY WHEN YOU ARE</b></span><span class="preview-time" id="clock">--:--</span></div>
+<div class="guide-chip" id="guide-chip">✳ <span id="guide-text">Find your frame</span></div>
+<div class="zoom-picker" id="zoom-picker"><button class="zoom-option is-selected" data-zoom="1">1×</button><button class="zoom-option" data-zoom="1.5">1.5×</button><button class="zoom-option" data-zoom="2">2×</button></div>
+<div class="camera-flash" id="camera-flash"></div>
+</section>
+<section class="control-deck"><div class="mode-picker"><button class="mode-option is-active" data-mode="PHOTO">PHOTO</button><button class="mode-option" data-mode="PORTRAIT">PORTRAIT</button><button class="mode-option" data-mode="SQUARE">SQUARE</button></div>
+<div class="shutter-row"><button class="side-control" id="flip-camera" aria-label="Switch camera">⇄</button><button class="shutter" id="take-photo" aria-label="Take photo"><span></span></button><button class="side-control gallery-thumb" id="open-last-photo" aria-label="Open last photo"><span class="thumb-placeholder">▧</span><img id="last-photo-thumb" alt="" hidden></button></div><div class="deck-caption"><span>BREEZY CAMERA</span><span>SEE DIFFERENTLY.</span></div></section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog class="sheet" id="settings-sheet"><form method="dialog" class="sheet-card"><div class="sheet-handle"></div><div class="sheet-heading"><div><p class="eyebrow">YOUR CAMERA</p><h2>Settings</h2></div><button class="close-button" aria-label="Close settings">×</button></div>
+<label class="setting-row"><span><b>Composition grid</b><small>Show a rule-of-thirds guide.</small></span><input type="checkbox" id="settings-grid"></label>
+<label class="setting-row"><span><b>Mirror front camera</b><small>Match the saved photo to the mirrored preview.</small></span><input type="checkbox" id="mirror-toggle"></label>
+<label class="setting-row"><span><b>Capture feedback</b><small>Use a small visual pulse on capture.</small></span><input type="checkbox" id="settings-feedback" checked></label>
+<label class="setting-row"><span><b>Shutter sound</b><small>Play a subtle sound when supported.</small></span><input type="checkbox" id="shutter-sound"></label>
+<div class="settings-section"><b>Have an idea for BREEZY?</b><p>Send a suggestion directly to the developer.</p><a class="primary-button suggestion-link" href="mailto:solanaachil@gmail.com?subject=BREEZY%20%E2%80%94%20Suggestion&body=Hi!%20I%20have%20a%20suggestion%20for%20BREEZY%3A%0A%0A">Send a suggestion ↗</a></div>
+<p class="setting-note">Camera controls depend on browser and device support. Photos are processed locally in this prototype.</p></form></dialog>
+<dialog class="sheet" id="photo-sheet"><div class="sheet-card photo-card"><div class="sheet-handle"></div><div class="sheet-heading"><div><p class="eyebrow">YOUR MOMENT</p><h2>Last capture</h2></div><button class="close-button" id="photo-close" aria-label="Close photo">×</button></div><img id="photo-preview" class="photo-preview" alt="Your latest Breezy photo"><div class="photo-actions"><button class="primary-button" id="edit-photo">Edit photo ✳</button><button class="primary-button" id="download-photo">Save photo ↓</button></div></div></dialog>
+<dialog class="sheet editor-sheet" id="editor-sheet"><div class="sheet-card editor-card"><div class="sheet-handle"></div><div class="sheet-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2>Photo editor</h2></div><button class="close-button" id="editor-close" aria-label="Close editor">×</button></div><canvas id="editor-canvas"></canvas>
+<div class="editor-tabs"><button class="editor-tab active" data-tab="looks">Looks</button><button class="editor-tab" data-tab="adjust">Adjust</button><button class="editor-tab" data-tab="effects">Effects</button><button class="editor-tab" data-tab="frames">Frames</button></div>
+<div class="editor-panel" id="looks-panel"><div class="preset-row"><button data-filter="none">Original</button><button data-filter="grayscale(1)">Mono</button><button data-filter="sepia(.65)">Warm</button><button data-filter="contrast(1.18) saturate(1.2)">Vivid</button><button data-filter="saturate(.7) contrast(1.08)">Soft</button></div></div>
+<div class="editor-panel" id="adjust-panel" hidden><label>Brightness <input type="range" min="50" max="150" value="100" data-adjust="brightness"></label><label>Contrast <input type="range" min="50" max="150" value="100" data-adjust="contrast"></label><label>Saturation <input type="range" min="0" max="200" value="100" data-adjust="saturate"></label></div>
+<div class="editor-panel" id="effects-panel" hidden><label class="effect-toggle"><input type="checkbox" id="grain-toggle"> Film grain</label><label class="effect-toggle"><input type="checkbox" id="vignette-toggle"> Vignette</label><label class="effect-toggle"><input type="checkbox" id="date-toggle"> Date stamp</label></div>
+<div class="editor-panel" id="frames-panel" hidden><div class="preset-row"><button data-frame="none">None</button><button data-frame="white">White</button><button data-frame="black">Black</button><button data-frame="paper">Paper</button></div></div>
+<div class="photo-actions"><button class="secondary-button" id="editor-reset">Reset</button><button class="primary-button" id="save-edit">Save edited photo ↓</button></div></div></dialog>
+<canvas id="capture-canvas" hidden></canvas><script src="app.js"></script>
+</body></html>

@@ -1,14 +1,1 @@
-{
-  "name": "Breezy — See differently",
-  "short_name": "Breezy",
-  "description": "A quiet, thoughtful camera companion.",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#090909",
-  "theme_color": "#090909",
-  "icons": [
-    { "src": "icons/breezy.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
-  ]
-}
+{"name":"Breezy — See differently","short_name":"Breezy","description":"A quiet, thoughtful camera companion.","start_url":"./","scope":"./","display":"standalone","orientation":"portrait","background_color":"#090d14","theme_color":"#090d14","icons":[{"src":"icons/breezy.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
